@@ -1,5 +1,5 @@
 import padStart from 'lodash.padstart';
-import { ThreadPool } from '../../../utils';
+import { ThreadPool } from './ThreadPool';
 import BlobStorage from '../../../services/Azure/BlobStorage';
 
 class AzureBlockUpload {
@@ -7,6 +7,7 @@ class AzureBlockUpload {
    * @param {String} url Where to send the file
    * @param {File} file The actual file
    * @param {Object} [opts] Options
+   * @param {String} [opts.blockIDPrefix] Block ID Prefix
    * @param {Number} [opts.blockSize] Block size
    * @param {Object} [opts.callbacks] Callbacks
    * @param {Function} [opts.callbacks.onSuccess] Function to be called when the upload finishes
@@ -41,6 +42,8 @@ class AzureBlockUpload {
     }
 
     this.simultaneousUploads = opts.simultaneousUploads || 3;
+
+    this.blockIDPrefix = opts.blockIDPrefix || 'block';
 
     // Callbacks
     const {
@@ -141,7 +144,7 @@ class AzureBlockUpload {
               ? (nBlock + 1) * this.blockSize
               : this.fileSize;
 
-          const blockID = btoa(`chunk${padStart(nBlock, 5)}`);
+          const blockID = btoa(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
           const blockBuffer = await this.readBlock(from, to);
