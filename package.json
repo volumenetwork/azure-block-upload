@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "babel src --out-dir lib",
-    "test": "test"
+    "test": ""
   },
   "repository": {
     "type": "git",
@@ -24,10 +24,12 @@
   },
   "homepage": "https://github.com/volumenetwork/azure-block-upload#readme",
   "dependencies": {
+    "@babel/polyfill": "^7.8.7",
     "lodash.padstart": "^4.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.6"
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6"
   }
 }
