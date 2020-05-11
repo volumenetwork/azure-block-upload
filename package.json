@@ -1,0 +1,34 @@
+{
+  "name": "azure-block-upload",
+  "version": "0.1.0",
+  "description": "A simple client to upload large files to Azure Blob Storage using SAS authentication",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "babel src --out-dir lib",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/volumenetwork/azure-block-upload.git"
+  },
+  "keywords": [
+    "azure",
+    "blob",
+    "block",
+    "sas"
+  ],
+  "author": "Volume Network",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/volumenetwork/azure-block-upload/issues"
+  },
+  "homepage": "https://github.com/volumenetwork/azure-block-upload#readme",
+  "dependencies": {
+    "lodash.padstart": "^4.6.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-es2015": "^6.24.1"
+  }
+}
