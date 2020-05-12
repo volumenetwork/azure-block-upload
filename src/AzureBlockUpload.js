@@ -1,6 +1,8 @@
 import padStart from 'lodash.padstart';
 import { ThreadPool } from './ThreadPool';
-import BlobStorage from '../../../services/Azure/BlobStorage';
+import { Azure } from './services';
+
+const { BlobStorage } = Azure;
 
 class AzureBlockUpload {
   /**
