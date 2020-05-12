@@ -1,8 +1,6 @@
 import padStart from 'lodash.padstart';
-import { ThreadPool } from './ThreadPool';
-import { Azure } from './services';
-
-const { BlobStorage } = Azure;
+import { BlobStorage } from './services/Azure';
+import ThreadPool from './ThreadPool';
 
 class AzureBlockUpload {
   /**
@@ -50,7 +48,7 @@ class AzureBlockUpload {
     // Callbacks
     const {
       onProgress = () => null,
-      onSuccess = () => console.log('success'),
+      onSuccess = () => null,
       onError = err => console.error(err),
     } = opts.callbacks || {};
 
