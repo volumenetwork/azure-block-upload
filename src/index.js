@@ -1,2 +1,3 @@
-export { default as reduxMiddleware } from './redux/middleware';
-export { default } from './AzureBlockUpload';
+import AzureBlockUpload from './AzureBlockUpload';
+
+module.exports = AzureBlockUpload;
