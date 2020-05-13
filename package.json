@@ -1,6 +1,6 @@
 {
   "name": "azure-block-upload",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A simple client to upload large files to Azure Blob Storage using SAS authentication",
   "main": "lib/index.js",
   "scripts": {
