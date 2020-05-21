@@ -1,5 +1,6 @@
 import padStart from 'lodash.padstart';
 import { BlobStorage } from './services/Azure';
+import FileUtils from './FileUtils';
 import ThreadPool from './ThreadPool';
 
 class AzureBlockUpload {
@@ -108,22 +109,7 @@ class AzureBlockUpload {
    * @returns {ArrayBuffer}
    */
   async readBlock(from, to) {
-    const p = new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      // Get partial file
-      const slicedFile = this.file.slice(from, to);
-
-      reader.onabort = () => reject(new Error('Reading aborted'));
-      reader.onerror = () => reject(new Error('file reading has failed'));
-      reader.onload = () => {
-        const arrayBuffer = reader.result;
-        resolve(arrayBuffer);
-      };
-      reader.readAsArrayBuffer(slicedFile);
-    });
-
-    return p;
+    return FileUtils.readBlock(from, to);
   }
 
   /**
