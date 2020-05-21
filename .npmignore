@@ -1,2 +1,7 @@
+/.github/
 /src/
 /test/
+
+.babelrc
+.eslintrc
+.npmignore
