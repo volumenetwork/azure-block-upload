@@ -11,7 +11,7 @@ const readAsArrayBuffer = jest.fn(function () {
 
 window.FileReader = jest.fn(() => ({
   readAsArrayBuffer,
-  result: new ArrayBuffer(),
+  result: new ArrayBuffer()
 }));
 
 const SASUrl = 'https://myaccount.blob.core.windows.net/pictures/profile.jpg?sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dD80ihBh5jfNpymO5Hg1IdiJIEvHcJpCMiCMnN%2fRnbI%3d';
@@ -54,15 +54,6 @@ describe('AzureBlockUpload', () => {
       const client = new AzureBlockUpload(SASUrl, file);
       await client.start();
 
-      expect(BlobStorage.putBlock).toBeCalled();
-    });
-
-    test('it calls `putBlock` method', async () => {
-      expect.assertions(1);
-
-      const client = new AzureBlockUpload(SASUrl, file);
-      await client.start();
-
       expect(BlobStorage.putBlock).toBeCalledTimes(client.totalBlocks);
     });
 
@@ -89,22 +80,20 @@ describe('AzureBlockUpload', () => {
     });
 
     test('Calls `onError`', async () => {
-      expect.assertions(1);
-      
+      expect.assertions(2);
+
       const onError = jest.fn();
       BlobStorage.putBlock.mockImplementationOnce(() => Promise.reject(new Error()));
 
       const client = new AzureBlockUpload(SASUrl, file, { callbacks: { onError } });
-      try {
-        await client.start();
-      } catch (err) {}
+      expect(client.start).toThrow();
 
       expect(onError).toBeCalled();
     });
 
     test('Calls `onProgress`', async () => {
       expect.assertions(4);
-      
+
       const onProgress = jest.fn();
       const client = new AzureBlockUpload(SASUrl, file, { callbacks: { onProgress } });
 

@@ -4,6 +4,7 @@
   "description": "A simple client to upload large files to Azure Blob Storage using SAS authentication",
   "main": "lib/index.js",
   "scripts": {
+    "lint": "eslint src test",
     "prepublish": "babel src --out-dir lib",
     "test": "jest"
   },
@@ -25,6 +26,7 @@
   "homepage": "https://github.com/volumenetwork/azure-block-upload#readme",
   "dependencies": {
     "axios": "^0.19.2",
+    "file-type": "^14.5.0",
     "lodash.padstart": "^4.6.1"
   },
   "devDependencies": {
@@ -34,8 +36,10 @@
     "@babel/preset-env": "^7.9.6",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^26.0.1",
-    "eslint": "^7.0.0",
-    "eslint-config-airbnb": "^18.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jest": "^23.13.2",
     "jest": "^26.0.1"
   }
 }

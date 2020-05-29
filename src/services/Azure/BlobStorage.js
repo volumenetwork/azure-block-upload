@@ -4,7 +4,7 @@ const BLOCK_MAX_SIZE = 4 * 1024 * 1024; // 4MB;
 
 const buildAzureHeaders = () => ({
   'x-ms-version': '2011-08-18',
-  'x-ms-date': new Date().toUTCString(),
+  'x-ms-date': new Date().toUTCString()
 });
 
 /**
@@ -20,16 +20,16 @@ const putBlock = async (sasUrl, data, blockID) => {
     url,
     headers: {
       ...buildAzureHeaders(),
-      'x-ms-blob-type': 'BlockBlob',
+      'x-ms-blob-type': 'BlockBlob'
     },
-    data,
+    data
   });
 };
 
 /**
- * he Put Block List operation writes a blob by specifying the list of block IDs that make up the blob.
- * In order to be written as part of a blob, a block must have been successfully written to the server
- * in a prior Put Block operation.
+ * The Put Block List operation writes a blob by specifying the list of
+ * block IDs that make up the blob. In order to be written as part of a blob,
+ * a block must have been successfully written to the server in a prior `Put Block` operation.
  * @param {String} sasUrl azure blob storage endpoint with sas auth
  * @param {Array<String>} blockIDList array with all blocks ids to commit
  * @param {String} fileType
@@ -45,14 +45,14 @@ const putBlockList = async (sasUrl, blockIDList, fileType) => {
     headers: {
       ...buildAzureHeaders(),
       'x-ms-blob-content-type': fileType,
-      'Content-Type': 'text/xml',
+      'Content-Type': 'text/xml'
     },
-    data,
+    data
   });
 };
 
 export default {
   BLOCK_MAX_SIZE,
   putBlock,
-  putBlockList,
+  putBlockList
 };

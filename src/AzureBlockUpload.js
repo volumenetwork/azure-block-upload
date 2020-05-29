@@ -13,7 +13,8 @@ class AzureBlockUpload {
    * @param {Object} [opts.callbacks] Callbacks
    * @param {Function} [opts.callbacks.onSuccess] Function to be called when the upload finishes
    * @param {Function} [opts.callbacks.onError] Function to be called when the upload fails
-   * @param {Function} [opts.callbacks.onProgress] Function to be called every time the progress changes
+   * @param {Function} [opts.callbacks.onProgress] Function to be called every time
+   * the progress changes
    * @param {Number} [opts.simultaneousUploads] Number of simultaneous uploads
    */
   constructor(url, file, opts = {}) {
@@ -36,8 +37,8 @@ class AzureBlockUpload {
     this.blockSize = opts.blockSize || BlobStorage.BLOCK_MAX_SIZE;
 
     if (
-      opts.simultaneousUploads &&
-      typeof opts.simultaneousUploads !== 'number'
+      opts.simultaneousUploads
+      && typeof opts.simultaneousUploads !== 'number'
     ) {
       throw new Error('simultaneousUploads must be a number');
     }
@@ -50,13 +51,13 @@ class AzureBlockUpload {
     const {
       onProgress = () => null,
       onSuccess = () => null,
-      onError = err => console.error(err),
+      onError = err => console.error(err)
     } = opts.callbacks || {};
 
     this.callbacks = {
       onProgress,
       onError,
-      onSuccess,
+      onSuccess
     };
 
     this.analizeFile();
@@ -96,20 +97,9 @@ class AzureBlockUpload {
     /**
      * How many blocks we will send
      */
-    this.totalBlocks =
-      size % this.blockSize === 0
-        ? size / this.blockSize
-        : Math.ceil(size / this.blockSize);
-  }
-
-  /**
-   * Read a block as an array buffer
-   * @param {Number} from Byte to start reading from
-   * @param {Number} to Byte to stop reading
-   * @returns {ArrayBuffer}
-   */
-  async readBlock(from, to) {
-    return FileUtils.readBlock(from, to);
+    this.totalBlocks = size % this.blockSize === 0
+      ? size / this.blockSize
+      : Math.ceil(size / this.blockSize);
   }
 
   /**
@@ -119,21 +109,19 @@ class AzureBlockUpload {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
 
-      const commit = async () =>
-        BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
+      const commit = async () => BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
 
       const job = async nBlock => {
         try {
           const from = nBlock * this.blockSize;
-          const to =
-            (nBlock + 1) * this.blockSize < this.fileSize
-              ? (nBlock + 1) * this.blockSize
-              : this.fileSize;
+          const to = (nBlock + 1) * this.blockSize < this.fileSize
+            ? (nBlock + 1) * this.blockSize
+            : this.fileSize;
 
           const blockID = btoa(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
-          const blockBuffer = await this.readBlock(from, to);
+          const blockBuffer = await FileUtils.readBlock(from, to);
           const data = new Uint8Array(blockBuffer);
 
           await BlobStorage.putBlock(this.url, data, blockID);

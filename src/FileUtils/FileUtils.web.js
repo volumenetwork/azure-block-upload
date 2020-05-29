@@ -1,10 +1,6 @@
-const getSize = (file = {}) => {
-  return file.size;
-}
+const getSize = (file = {}) => file.size;
 
-const getType = (file = {}) => {
-  return file.type;
-}
+const getType = (file = {}) => file.type;
 
 const readBlock = (from, to) => new Promise(
   (resolve, reject) => {
@@ -20,7 +16,7 @@ const readBlock = (from, to) => new Promise(
       resolve(arrayBuffer);
     };
     reader.readAsArrayBuffer(slicedFile);
-  });
+  }
+);
 
 export default { getSize, getType, readBlock };
-
