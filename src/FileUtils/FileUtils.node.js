@@ -56,4 +56,4 @@ const readBlock = (filePath, from, to) => new Promise((resolve, reject) => {
   }
 });
 
-export default { getSize, getType, readBlock };
+module.exports = { getSize, getType, readBlock };

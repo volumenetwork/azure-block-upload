@@ -12,6 +12,7 @@
   },
   "rules": {
     "arrow-parens": "off",
+    "comma-dangle": "off",
     "consistent-return": "off",
     "func-names": "off",
     "no-console": "off"

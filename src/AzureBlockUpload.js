@@ -67,17 +67,15 @@ class AzureBlockUpload {
    * Do the calculations for knowing how many blocks we are going to use
    */
   analizeFile() {
-    const { size, type } = this.file;
-
     /**
      * Size of file
      */
-    this.fileSize = size;
+    this.fileSize = FileUtils.getSize(this.file);
 
     /**
      * Type of file
      */
-    this.fileType = type;
+    this.fileType = FileUtils.getType(this.file);
 
     /**
      * Indicates where in the file we are
@@ -87,19 +85,19 @@ class AzureBlockUpload {
     /**
      * Remaining bytes to send
      */
-    this.totalRemainingBytes = size;
+    this.totalRemainingBytes = this.fileSize;
 
     // If file is smaller than the block size, block size will be reduced to the file size
-    if (size < this.blockSize) {
-      this.blockSize = size;
+    if (this.fileSize < this.blockSize) {
+      this.blockSize = this.fileSize;
     }
 
     /**
      * How many blocks we will send
      */
-    this.totalBlocks = size % this.blockSize === 0
-      ? size / this.blockSize
-      : Math.ceil(size / this.blockSize);
+    this.totalBlocks = this.fileSize % this.blockSize === 0
+      ? this.fileSize / this.blockSize
+      : Math.ceil(this.fileSize / this.blockSize);
   }
 
   /**
@@ -121,7 +119,7 @@ class AzureBlockUpload {
           const blockID = btoa(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
-          const blockBuffer = await FileUtils.readBlock(from, to);
+          const blockBuffer = await FileUtils.readBlock(this.file, from, to);
           const data = new Uint8Array(blockBuffer);
 
           await BlobStorage.putBlock(this.url, data, blockID);
