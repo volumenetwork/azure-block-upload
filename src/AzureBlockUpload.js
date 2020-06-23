@@ -1,7 +1,10 @@
 import padStart from 'lodash.padstart';
+import { isRunningOnWeb } from './app';
 import { BlobStorage } from './services/Azure';
 import FileUtils from './FileUtils';
 import ThreadPool from './ThreadPool';
+
+const base64 = str => (isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString('base64'));
 
 class AzureBlockUpload {
   /**
@@ -24,8 +27,12 @@ class AzureBlockUpload {
 
     this.url = url;
 
-    if (!(file instanceof File)) {
-      throw new Error('file must be instance of File');
+    if (typeof File === 'function') {
+      if (!(file instanceof File)) {
+        throw new Error('file must be instance of File');
+      }
+    } else if (typeof file !== 'string') {
+      throw new Error('file must be instance of string');
     }
 
     this.file = file;
@@ -116,7 +123,7 @@ class AzureBlockUpload {
             ? (nBlock + 1) * this.blockSize
             : this.fileSize;
 
-          const blockID = btoa(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
+          const blockID = base64(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
           const blockBuffer = await FileUtils.readBlock(this.file, from, to);

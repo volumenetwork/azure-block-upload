@@ -1,15 +1,17 @@
 /* eslint-disable import/first */
 jest.mock('../src/services/Azure');
-jest.mock('../src/FileUtils/FileUtils.web', () => ({
+jest.mock('../src/FileUtils', () => ({
   getSize: jest.fn().mockReturnValue(50000),
   getType: jest.fn().mockReturnValue('video/mp4'),
   readBlock: jest.fn().mockImplementation(async (file, f, t) => new ArrayBuffer(t - f)),
 }));
 
 import AzureBlockUpload from '../src';
+import { isRunningOnWeb } from '../src/app';
 
 const { BlobStorage } = require('../src/services/Azure');
-const { readBlock } = require('../src/FileUtils/FileUtils.web');
+
+const { readBlock } = require('../src/FileUtils');
 
 // const readAsArrayBuffer = jest.fn(function () {
 //   this.result = new ArrayBuffer();
@@ -22,7 +24,7 @@ const { readBlock } = require('../src/FileUtils/FileUtils.web');
 // }));
 
 const SASUrl = 'https://myaccount.blob.core.windows.net/pictures/profile.jpg?sv=2012-02-12&st=2009-02-09&se=2009-02-10&sr=c&sp=r&si=YWJjZGVmZw%3d%3d&sig=dD80ihBh5jfNpymO5Hg1IdiJIEvHcJpCMiCMnN%2fRnbI%3d';
-const file = new File(['132456789'], 'filename', { type: 'video/mp4' });
+const file = isRunningOnWeb ? new File(['132456789'], 'filename', { type: 'video/mp4' }) : 'file_path';
 
 describe('AzureBlockUpload', () => {
   beforeEach(() => {
