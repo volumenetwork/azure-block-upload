@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "eslint src test",
     "prepublish": "babel src --out-dir lib",
-    "test": "jest"
+    "test": "npm run-script test-node; npm run-script test-web",
+    "test-node": "jest --env=node",
+    "test-web": "jest --env=jsdom"
   },
   "repository": {
     "type": "git",
@@ -27,7 +29,8 @@
   "dependencies": {
     "axios": "^0.19.2",
     "file-type": "^14.5.0",
-    "lodash.padstart": "^4.6.1"
+    "lodash.padstart": "^4.6.1",
+    "mime-types": "^2.1.27"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",

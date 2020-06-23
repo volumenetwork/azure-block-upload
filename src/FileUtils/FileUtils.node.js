@@ -1,4 +1,5 @@
 import fs from 'fs';
+import mime from 'mime-types';
 
 /**
  * Gets file size
@@ -9,7 +10,7 @@ const getSize = (filePath = '') => {
   return size;
 };
 
-const getType = (filePath = '') => filePath.type; // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const getType = (filePath = '') => mime.lookup(filePath);
 
 /**
  * Reads a part of a file
