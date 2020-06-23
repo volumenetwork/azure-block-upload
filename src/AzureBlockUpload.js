@@ -1,6 +1,10 @@
 import padStart from 'lodash.padstart';
+import { isRunningOnWeb } from './app';
 import { BlobStorage } from './services/Azure';
+import FileUtils from './FileUtils';
 import ThreadPool from './ThreadPool';
+
+const base64 = str => (isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString('base64'));
 
 class AzureBlockUpload {
   /**
@@ -12,7 +16,8 @@ class AzureBlockUpload {
    * @param {Object} [opts.callbacks] Callbacks
    * @param {Function} [opts.callbacks.onSuccess] Function to be called when the upload finishes
    * @param {Function} [opts.callbacks.onError] Function to be called when the upload fails
-   * @param {Function} [opts.callbacks.onProgress] Function to be called every time the progress changes
+   * @param {Function} [opts.callbacks.onProgress] Function to be called every time
+   * the progress changes
    * @param {Number} [opts.simultaneousUploads] Number of simultaneous uploads
    */
   constructor(url, file, opts = {}) {
@@ -22,8 +27,12 @@ class AzureBlockUpload {
 
     this.url = url;
 
-    if (!(file instanceof File)) {
-      throw new Error('file must be instance of File');
+    if (typeof File === 'function') {
+      if (!(file instanceof File)) {
+        throw new Error('file must be instance of File');
+      }
+    } else if (typeof file !== 'string') {
+      throw new Error('file must be instance of string');
     }
 
     this.file = file;
@@ -35,8 +44,8 @@ class AzureBlockUpload {
     this.blockSize = opts.blockSize || BlobStorage.BLOCK_MAX_SIZE;
 
     if (
-      opts.simultaneousUploads &&
-      typeof opts.simultaneousUploads !== 'number'
+      opts.simultaneousUploads
+      && typeof opts.simultaneousUploads !== 'number'
     ) {
       throw new Error('simultaneousUploads must be a number');
     }
@@ -49,13 +58,13 @@ class AzureBlockUpload {
     const {
       onProgress = () => null,
       onSuccess = () => null,
-      onError = err => console.error(err),
+      onError = err => console.error(err)
     } = opts.callbacks || {};
 
     this.callbacks = {
       onProgress,
       onError,
-      onSuccess,
+      onSuccess
     };
 
     this.analizeFile();
@@ -65,17 +74,15 @@ class AzureBlockUpload {
    * Do the calculations for knowing how many blocks we are going to use
    */
   analizeFile() {
-    const { size, type } = this.file;
-
     /**
      * Size of file
      */
-    this.fileSize = size;
+    this.fileSize = FileUtils.getSize(this.file);
 
     /**
      * Type of file
      */
-    this.fileType = type;
+    this.fileType = FileUtils.getType(this.file);
 
     /**
      * Indicates where in the file we are
@@ -85,45 +92,19 @@ class AzureBlockUpload {
     /**
      * Remaining bytes to send
      */
-    this.totalRemainingBytes = size;
+    this.totalRemainingBytes = this.fileSize;
 
     // If file is smaller than the block size, block size will be reduced to the file size
-    if (size < this.blockSize) {
-      this.blockSize = size;
+    if (this.fileSize < this.blockSize) {
+      this.blockSize = this.fileSize;
     }
 
     /**
      * How many blocks we will send
      */
-    this.totalBlocks =
-      size % this.blockSize === 0
-        ? size / this.blockSize
-        : Math.ceil(size / this.blockSize);
-  }
-
-  /**
-   * Read a block as an array buffer
-   * @param {Number} from Byte to start reading from
-   * @param {Number} to Byte to stop reading
-   * @returns {ArrayBuffer}
-   */
-  async readBlock(from, to) {
-    const p = new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      // Get partial file
-      const slicedFile = this.file.slice(from, to);
-
-      reader.onabort = () => reject(new Error('Reading aborted'));
-      reader.onerror = () => reject(new Error('file reading has failed'));
-      reader.onload = () => {
-        const arrayBuffer = reader.result;
-        resolve(arrayBuffer);
-      };
-      reader.readAsArrayBuffer(slicedFile);
-    });
-
-    return p;
+    this.totalBlocks = this.fileSize % this.blockSize === 0
+      ? this.fileSize / this.blockSize
+      : Math.ceil(this.fileSize / this.blockSize);
   }
 
   /**
@@ -133,21 +114,19 @@ class AzureBlockUpload {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
 
-      const commit = async () =>
-        BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
+      const commit = async () => BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
 
       const job = async nBlock => {
         try {
           const from = nBlock * this.blockSize;
-          const to =
-            (nBlock + 1) * this.blockSize < this.fileSize
-              ? (nBlock + 1) * this.blockSize
-              : this.fileSize;
+          const to = (nBlock + 1) * this.blockSize < this.fileSize
+            ? (nBlock + 1) * this.blockSize
+            : this.fileSize;
 
-          const blockID = btoa(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
+          const blockID = base64(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
-          const blockBuffer = await this.readBlock(from, to);
+          const blockBuffer = await FileUtils.readBlock(this.file, from, to);
           const data = new Uint8Array(blockBuffer);
 
           await BlobStorage.putBlock(this.url, data, blockID);
