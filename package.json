@@ -1,6 +1,6 @@
 {
-  "name": "azure-block-upload",
-  "version": "0.3.1",
+  "name": "@meeco/azure-block-upload",
+  "version": "0.0.1",
   "description": "A simple client to upload large files to Azure Blob Storage using SAS authentication",
   "main": "lib/index.js",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/volumenetwork/azure-block-upload.git"
+    "url": "git+https://github.com/Meeco/azure-block-upload.git"
   },
   "keywords": [
     "azure",
@@ -20,12 +20,12 @@
     "block",
     "sas"
   ],
-  "author": "Volume Network",
+  "author": "Meeco",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/volumenetwork/azure-block-upload/issues"
+    "url": "https://github.com/Meeco/azure-block-upload/issues"
   },
-  "homepage": "https://github.com/volumenetwork/azure-block-upload#readme",
+  "homepage": "https://github.com/Meeco/azure-block-upload#readme",
   "dependencies": {
     "axios": "^0.19.2",
     "file-type": "^14.5.0",
