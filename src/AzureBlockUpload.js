@@ -1,10 +1,12 @@
-import padStart from 'lodash.padstart';
-import { isRunningOnWeb } from './app';
-import { BlobStorage } from './services/Azure';
-import FileUtils from './FileUtils';
-import ThreadPool from './ThreadPool';
+import padStart from "lodash.padstart";
+import { isRunningOnWeb } from "./app";
+import { BlobStorage } from "./services/Azure";
+import FileUtils from "./FileUtils";
+import ThreadPool from "./ThreadPool";
+import * as Cryppo from "@meeco/cryppo";
 
-const base64 = str => (isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString('base64'));
+const base64 = (str) =>
+  isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString("base64");
 
 class AzureBlockUpload {
   /**
@@ -21,50 +23,50 @@ class AzureBlockUpload {
    * @param {Number} [opts.simultaneousUploads] Number of simultaneous uploads
    */
   constructor(url, file, opts = {}) {
-    if (typeof url !== 'string') {
-      throw new Error('url must be a string');
+    if (typeof url !== "string") {
+      throw new Error("url must be a string");
     }
 
     this.url = url;
 
-    if (typeof File === 'function') {
+    if (typeof File === "function") {
       if (!(file instanceof File)) {
-        throw new Error('file must be instance of File');
+        throw new Error("file must be instance of File");
       }
-    } else if (typeof file !== 'string') {
-      throw new Error('file must be instance of string');
+    } else if (typeof file !== "string") {
+      throw new Error("file must be instance of string");
     }
 
     this.file = file;
 
-    if (opts.blockSize && typeof opts.blockSize !== 'number') {
-      throw new Error('blockSize must be a number');
+    if (opts.blockSize && typeof opts.blockSize !== "number") {
+      throw new Error("blockSize must be a number");
     }
 
     this.blockSize = opts.blockSize || BlobStorage.BLOCK_MAX_SIZE;
 
     if (
-      opts.simultaneousUploads
-      && typeof opts.simultaneousUploads !== 'number'
+      opts.simultaneousUploads &&
+      typeof opts.simultaneousUploads !== "number"
     ) {
-      throw new Error('simultaneousUploads must be a number');
+      throw new Error("simultaneousUploads must be a number");
     }
 
     this.simultaneousUploads = opts.simultaneousUploads || 3;
 
-    this.blockIDPrefix = opts.blockIDPrefix || 'block';
+    this.blockIDPrefix = opts.blockIDPrefix || "block";
 
     // Callbacks
     const {
       onProgress = () => null,
       onSuccess = () => null,
-      onError = err => console.error(err)
+      onError = (err) => console.error(err),
     } = opts.callbacks || {};
 
     this.callbacks = {
       onProgress,
       onError,
-      onSuccess
+      onSuccess,
     };
 
     this.analizeFile();
@@ -102,34 +104,48 @@ class AzureBlockUpload {
     /**
      * How many blocks we will send
      */
-    this.totalBlocks = this.fileSize % this.blockSize === 0
-      ? this.fileSize / this.blockSize
-      : Math.ceil(this.fileSize / this.blockSize);
+    this.totalBlocks =
+      this.fileSize % this.blockSize === 0
+        ? this.fileSize / this.blockSize
+        : Math.ceil(this.fileSize / this.blockSize);
   }
 
   /**
    * Start uploading
    */
-  async start() {
+  async start(dataEncryptionKey) {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
 
-      const commit = async () => BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
+      const commit = async () =>
+        BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
 
-      const job = async nBlock => {
+      const job = async (nBlock) => {
         try {
           const from = nBlock * this.blockSize;
-          const to = (nBlock + 1) * this.blockSize < this.fileSize
-            ? (nBlock + 1) * this.blockSize
-            : this.fileSize;
+          const to =
+            (nBlock + 1) * this.blockSize < this.fileSize
+              ? (nBlock + 1) * this.blockSize
+              : this.fileSize;
 
           const blockID = base64(`${this.blockIDPrefix}${padStart(nBlock, 5)}`);
           blockIDList.push(blockID);
 
           const blockBuffer = await FileUtils.readBlock(this.file, from, to);
           const data = new Uint8Array(blockBuffer);
+          let encrypted_data = dataEncryptionKey
+            ? await Cryppo.encryptWithKey({
+                key: dataEncryptionKey,
+                data: data,
+                strategy: "AES-GCM",
+              })
+            : null;
 
-          await BlobStorage.putBlock(this.url, data, blockID);
+          await BlobStorage.putBlock(
+            this.url,
+            encrypted_data ? encrypted_data.serialized : data,
+            blockID
+          );
 
           const progress = (nBlock + 1) / this.totalBlocks;
 
