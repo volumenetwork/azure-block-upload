@@ -143,7 +143,7 @@ class AzureBlockUpload {
 
           await BlobStorage.putBlock(
             this.url,
-            encrypted_data ? encrypted_data.serialized : data,
+            encrypted_data ? encrypted_data.encrypted : data,
             blockID
           );
 
