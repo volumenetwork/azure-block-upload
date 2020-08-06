@@ -51,8 +51,38 @@ const putBlockList = async (sasUrl, blockIDList, fileType) => {
   });
 };
 
+/**
+ * Get existing Blob Block Chunk
+ * @param {String} sasUrl azure blob storage endpoint with sas auth
+ * @param {String} range range in bytes e.g 0-255
+ */
+const getBlock = async (sasUrl, range) => {
+  const url = `${sasUrl}`;
+  return axios({
+    method: "get",
+    url,
+    headers: {
+      "x-ms-range": `bytes=${range}`,
+    },
+  });
+};
+
+/**
+ * Get existing Blob Properties
+ * @param {String} sasUrl azure blob storage endpoint with sas auth
+ */
+const getBlobProperties = async (sasUrl, range) => {
+  const url = `${sasUrl}`;
+  return axios({
+    method: "head",
+    url,
+  });
+};
+
 export default {
   BLOCK_MAX_SIZE,
   putBlock,
   putBlockList,
+  getBlock,
+  getBlobProperties,
 };

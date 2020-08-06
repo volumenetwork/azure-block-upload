@@ -8,7 +8,7 @@ import * as Cryppo from "@meeco/cryppo";
 const base64 = (str) =>
   isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString("base64");
 
-class AzureBlockUpload {
+class AzureBlock {
   /**
    * @param {String} url Where to send the file
    * @param {File} file The actual file
@@ -113,7 +113,7 @@ class AzureBlockUpload {
   /**
    * Start uploading
    */
-  async start(dataEncryptionKey) {
+  async upload(dataEncryptionKey) {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
 
@@ -143,7 +143,9 @@ class AzureBlockUpload {
 
           await BlobStorage.putBlock(
             this.url,
-            encrypted_data ? encrypted_data.serialized : data,
+            encrypted_data
+              ? Cryppo.stringAsBinaryBuffer(encrypted_data.encrypted)
+              : data,
             blockID
           );
 
@@ -182,4 +184,4 @@ class AzureBlockUpload {
   }
 }
 
-export default AzureBlockUpload;
+export default AzureBlock;
