@@ -64,6 +64,7 @@ const getBlock = async (sasUrl, range) => {
     headers: {
       "x-ms-range": `bytes=${range}`,
     },
+    responseType: "blob",
   });
 };
 
@@ -71,7 +72,7 @@ const getBlock = async (sasUrl, range) => {
  * Get existing Blob Properties
  * @param {String} sasUrl azure blob storage endpoint with sas auth
  */
-const getBlobProperties = async (sasUrl, range) => {
+const getBlobProperties = async (sasUrl) => {
   const url = `${sasUrl}`;
   return axios({
     method: "head",
