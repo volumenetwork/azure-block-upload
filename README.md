@@ -13,10 +13,10 @@ npm install azure-block-upload
 To upload a file to Azure Blob Storage using this module, just import it, create a new instance with the needed parameters, and call the `upload` method.
 
 ```
-import AzureBlock from 'azure-block-upload';
+import AzureBlockUpload from 'azure-block-upload';
 
-const client = new AzureBlock(sasurl, file, options);
-await client.upload();
+const client = new AzureBlockUpload(sasurl, file, options);
+await client.start();
 ```
 
 ### sasUrl

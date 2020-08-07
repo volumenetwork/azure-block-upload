@@ -1,3 +1,3 @@
-import AzureBlock from "./AzureBlock";
+import AzureBlockUpload from "./AzureBlockUpload";
 
-module.exports = AzureBlock;
+module.exports = AzureBlockUpload;

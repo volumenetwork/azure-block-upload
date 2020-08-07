@@ -8,7 +8,7 @@ jest.mock("../src/FileUtils", () => ({
     .mockImplementation(async (file, f, t) => new ArrayBuffer(t - f)),
 }));
 
-import AzureBlock from "../src";
+import AzureBlockUpload from "../src";
 import { isRunningOnWeb } from "../src/app";
 
 const { BlobStorage } = require("../src/services/Azure");
@@ -31,7 +31,7 @@ const file = isRunningOnWeb
   ? new File(["132456789"], "filename", { type: "video/mp4" })
   : "file_path";
 
-describe("AzureBlock", () => {
+describe("AzureBlockUpload", () => {
   beforeEach(() => {
     BlobStorage.putBlock.mockReset();
     BlobStorage.putBlockList.mockReset();
@@ -40,25 +40,25 @@ describe("AzureBlock", () => {
 
   describe("Creating instance", () => {
     test("it fails when url is missing", () => {
-      const fn = () => new AzureBlock();
+      const fn = () => new AzureBlockUpload();
       expect(fn).toThrow();
     });
 
     test("it fails when file is missing", () => {
-      const fn = () => new AzureBlock(SASUrl);
+      const fn = () => new AzureBlockUpload(SASUrl);
       expect(fn).toThrow();
     });
 
     test("it successfully creates an instance", () => {
-      const instance = new AzureBlock(SASUrl, file);
-      expect(instance instanceof AzureBlock).toBeTruthy();
+      const instance = new AzureBlockUpload(SASUrl, file);
+      expect(instance instanceof AzureBlockUpload).toBeTruthy();
     });
   });
 
   describe("Running the upload", () => {
     test("it reads block from file", async () => {
-      const client = new AzureBlock(SASUrl, file);
-      await client.upload();
+      const client = new AzureBlockUpload(SASUrl, file);
+      await client.start();
 
       expect(readBlock).toBeCalled();
     });
@@ -66,8 +66,8 @@ describe("AzureBlock", () => {
     test("it calls `putBlock` method", async () => {
       expect.assertions(1);
 
-      const client = new AzureBlock(SASUrl, file);
-      await client.upload();
+      const client = new AzureBlockUpload(SASUrl, file);
+      await client.start();
 
       expect(BlobStorage.putBlock).toBeCalledTimes(client.totalBlocks);
     });
@@ -75,8 +75,8 @@ describe("AzureBlock", () => {
     test("it calls `putBlockList` method", async () => {
       expect.assertions(1);
 
-      const client = new AzureBlock(SASUrl, file);
-      await client.upload();
+      const client = new AzureBlockUpload(SASUrl, file);
+      await client.start();
 
       expect(BlobStorage.putBlockList).toBeCalledTimes(1);
     });
@@ -88,8 +88,10 @@ describe("AzureBlock", () => {
 
       const onSuccess = jest.fn();
 
-      const client = new AzureBlock(SASUrl, file, { callbacks: { onSuccess } });
-      await client.upload();
+      const client = new AzureBlockUpload(SASUrl, file, {
+        callbacks: { onSuccess },
+      });
+      await client.start();
 
       expect(onSuccess).toBeCalledTimes(1);
     });
@@ -100,8 +102,10 @@ describe("AzureBlock", () => {
       const onError = jest.fn();
       readBlock.mockImplementationOnce(() => Promise.reject(new Error()));
 
-      const client = new AzureBlock(SASUrl, file, { callbacks: { onError } });
-      await expect(() => client.upload()).rejects.toThrow();
+      const client = new AzureBlockUpload(SASUrl, file, {
+        callbacks: { onError },
+      });
+      await expect(() => client.start()).rejects.toThrow();
 
       expect(onError).toBeCalled();
     });
@@ -110,11 +114,11 @@ describe("AzureBlock", () => {
       expect.assertions(4);
 
       const onProgress = jest.fn();
-      const client = new AzureBlock(SASUrl, file, {
+      const client = new AzureBlockUpload(SASUrl, file, {
         callbacks: { onProgress },
       });
 
-      await client.upload();
+      await client.start();
 
       // To have called callback
       expect(onProgress).toBeCalled();
