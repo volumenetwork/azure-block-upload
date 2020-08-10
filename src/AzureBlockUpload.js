@@ -1,9 +1,10 @@
-import padStart from "lodash.padstart";
 import { isRunningOnWeb } from "./app";
+import padStart from "lodash.padstart";
 import { BlobStorage } from "./services/Azure";
 import FileUtils from "./FileUtils";
 import ThreadPool from "./ThreadPool";
-import * as Cryppo from "@meeco/cryppo";
+const Cryppo = require("@meeco/cryppo");
+const crypto = require("crypto");
 
 const base64 = (str) =>
   isRunningOnWeb ? window.btoa(str) : Buffer.from(str).toString("base64");
@@ -116,6 +117,11 @@ class AzureBlockUpload {
   async start(dataEncryptionKey) {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
+      const artifacts = {
+        iv: crypto.randomBytes(12),
+        ad: "none",
+        at: [],
+      };
 
       const commit = async () =>
         BlobStorage.putBlockList(this.url, blockIDList, this.fileType);
@@ -133,19 +139,22 @@ class AzureBlockUpload {
 
           const blockBuffer = await FileUtils.readBlock(this.file, from, to);
           const data = new Uint8Array(blockBuffer);
-          let encrypted_data = dataEncryptionKey
-            ? await Cryppo.encryptWithKey({
-                key: dataEncryptionKey,
-                data: data,
-                strategy: "AES-GCM",
-              })
+          let encrypt = dataEncryptionKey
+            ? Cryppo._encryptWithKey(
+                dataEncryptionKey,
+                data,
+                Cryppo.CipherStrategy.AES_GCM,
+                artifacts.iv
+              )
+            : null;
+
+          encrypt && encrypt.artifacts
+            ? (artifacts.at[nBlock] = encrypt.artifacts.at)
             : null;
 
           await BlobStorage.putBlock(
             this.url,
-            encrypted_data
-              ? Cryppo.stringAsBinaryBuffer(encrypted_data.encrypted)
-              : data,
+            encrypt ? Cryppo.stringAsBinaryBuffer(encrypt.encrypted) : data,
             blockID
           );
 
@@ -161,10 +170,10 @@ class AzureBlockUpload {
             await commit();
           }
 
-          this.callbacks.onProgress({ progress });
+          this.callbacks.onProgress({ progress, fileName: this.file.name });
 
           if (this.totalRemainingBytes === 0) {
-            this.callbacks.onSuccess();
+            this.callbacks.onSuccess({ artifacts });
             return resolve();
           }
         } catch (error) {
