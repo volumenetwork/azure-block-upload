@@ -3,7 +3,7 @@ import padStart from "lodash.padstart";
 import { BlobStorage } from "./services/Azure";
 import FileUtils from "./FileUtils";
 import ThreadPool from "./ThreadPool";
-const Cryppo = require("@meeco/cryppo");
+import * as Cryppo from "@meeco/cryppo";
 const crypto = require("crypto");
 
 const base64 = (str) =>
@@ -118,9 +118,11 @@ class AzureBlockUpload {
     const p = new Promise((resolve, reject) => {
       const blockIDList = [];
       const artifacts = {
-        iv: crypto.randomBytes(12),
+        iv: [],
         ad: "none",
         at: [],
+        range: [],
+        encryption_stratergy: Cryppo.CipherStrategy.AES_GCM,
       };
 
       const commit = async () =>
@@ -138,19 +140,23 @@ class AzureBlockUpload {
           blockIDList.push(blockID);
 
           const blockBuffer = await FileUtils.readBlock(this.file, from, to);
-          const data = new Uint8Array(blockBuffer);
-          let encrypt = dataEncryptionKey
-            ? Cryppo._encryptWithKey(
-                dataEncryptionKey,
-                data,
-                Cryppo.CipherStrategy.AES_GCM,
-                artifacts.iv
-              )
-            : null;
+          artifacts.range[nBlock] = `bytes=${from}-${to}`;
 
-          encrypt && encrypt.artifacts
-            ? (artifacts.at[nBlock] = encrypt.artifacts.at)
-            : null;
+          const data = new Uint8Array(blockBuffer);
+
+          let encrypt = null;
+          if (dataEncryptionKey) {
+            const iv = crypto.randomBytes(12);
+            encrypt = Cryppo.encryptWithKeyUsingArtefacts(
+              dataEncryptionKey,
+              Cryppo.binaryBufferToString(data),
+              Cryppo.CipherStrategy.AES_GCM,
+              Cryppo.binaryBufferToString(iv)
+            );
+            artifacts.iv[nBlock] = iv;
+            artifacts.at[nBlock] = encrypt.artifacts.at;
+            console.log(encrypt);
+          }
 
           await BlobStorage.putBlock(
             this.url,

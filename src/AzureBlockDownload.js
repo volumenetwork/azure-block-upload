@@ -1,4 +1,6 @@
 import { BlobStorage } from "./services/Azure";
+import FileUtils from "./FileUtils";
+import * as Cryppo from "@meeco/cryppo";
 
 class AzureBlockDownload {
   /**
@@ -14,12 +16,55 @@ class AzureBlockDownload {
   }
 
   /**
-   * Start uploading
+   * Start downloading
    */
-  async start(dataEncryptionKey, range) {
-    return BlobStorage.getBlock(this.url, range).then((response) => {
-      return response.data;
-    });
+  async start(dataEncryptionKey, strategy, encryptionArtifact, range) {
+    if (range) {
+      const block = await BlobStorage.getBlock(this.url, range);
+      const fileBuffer = await FileUtils.readBlock(
+        block.data,
+        0,
+        FileUtils.getSize(block.data)
+      );
+      const data = new Uint8Array(fileBuffer);
+      // console.log("block data: " + data);
+      // console.log("string version: " + Cryppo.binaryBufferToString(data));
+
+      let byteNumbers = [];
+      if (dataEncryptionKey && strategy && encryptionArtifact) {
+        console.log("key" + dataEncryptionKey);
+        console.log("encryption artifact" + JSON.stringify(encryptionArtifact));
+        console.log("strategy" + strategy);
+        const str = Cryppo.decryptWithKeyUsingArtefacts(
+          dataEncryptionKey,
+          Cryppo.binaryBufferToString(data),
+          strategy,
+          encryptionArtifact
+        );
+
+        // console.log("str" + str);
+        // console.log("string lenght" + str.length);
+
+        for (let i = 0; i < str.length; i++) {
+          byteNumbers.push(str.charCodeAt(i));
+        }
+        // console.log("byteNumber: " + byteNumbers);
+      }
+      return new Promise((resolve) => {
+        resolve(byteNumbers || data);
+      });
+    } else {
+      const blob = await BlobStorage.getBlock(this.url, null);
+      const fileBuffer = await FileUtils.readBlock(
+        blob.data,
+        0,
+        FileUtils.getSize(blob.data)
+      );
+      const data = new Uint8Array(fileBuffer);
+      return new Promise((resolve) => {
+        resolve(data);
+      });
+    }
   }
 }
 
