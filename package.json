@@ -28,7 +28,7 @@
   "homepage": "https://github.com/volumenetwork/azure-block-upload#readme",
   "dependencies": {
     "axios": "^0.19.2",
-    "file-type": "^14.5.0",
+    "file-type": "^16.5.4",
     "lodash.padstart": "^4.6.1",
     "mime-types": "^2.1.27"
   },
